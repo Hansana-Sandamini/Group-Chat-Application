@@ -3,6 +3,6 @@ module lk.ijse.hibernate.serenitymentalhealththerapycenter.chatapp {
     requires javafx.fxml;
 
 
-    opens lk.ijse.hibernate.serenitymentalhealththerapycenter.chatapp to javafx.fxml;
-    exports lk.ijse.hibernate.serenitymentalhealththerapycenter.chatapp;
+    opens lk.ijse.inp.chatapplication.controller to javafx.fxml;
+    exports lk.ijse.inp.chatapplication;
 }
