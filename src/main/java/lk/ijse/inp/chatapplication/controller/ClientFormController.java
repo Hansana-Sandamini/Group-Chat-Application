@@ -33,6 +33,10 @@ public class ClientFormController {
     @FXML
     private TextField txtClient;
 
+    public void setClientName(String name) {
+        lblName.setText(name);
+    }
+
     @FXML
     void btnFileOnAction(ActionEvent event) {
 
