@@ -88,6 +88,8 @@ public class ServerFormController implements Initializable {
                         imageView.setImage(image);
                     }
 
+                    textAreaServer.appendText("Client : " + message + "\n");
+
                     if (message.equalsIgnoreCase("exit")) {
                         break;
                     }
