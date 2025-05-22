@@ -1,4 +1,4 @@
-module lk.ijse.hibernate.serenitymentalhealththerapycenter.chatapp {
+module lk.ijse.inp.chatapplication {
     requires javafx.controls;
     requires javafx.fxml;
 

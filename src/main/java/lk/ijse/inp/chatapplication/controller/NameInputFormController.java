@@ -22,26 +22,22 @@ public class NameInputFormController {
     void btnSubmitOnAction(ActionEvent event) throws Exception {
         String name = txtName.getText().trim();
         if (!name.isEmpty()) {
-            // Load client form with the entered name
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClientForm.fxml"));
             Parent root = loader.load();
 
-            // Get the controller and set the name
             ClientFormController clientController = loader.getController();
             clientController.setClientName(name);
 
             Stage clientStage = new Stage();
             clientStage.setScene(new Scene(root));
             clientStage.setTitle("Client: " + name);
+            clientStage.setOnCloseRequest(e -> clientController.disconnect());
             clientStage.show();
 
-            // Close the name input form
             Stage currentStage = (Stage) btnSubmit.getScene().getWindow();
             currentStage.close();
 
-            // Open a new name input form for another client
             ServerInitializer.loadNameInputForm();
         }
     }
-
 }

@@ -2,7 +2,6 @@ package lk.ijse.inp.chatapplication.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -11,16 +10,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.FileChooser;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.nio.file.Files;
 
-public class ClientFormController implements Initializable {
+import javafx.application.Platform;
+
+public class ClientFormController {
 
     @FXML
     private Button btnFile;
@@ -43,68 +41,100 @@ public class ClientFormController implements Initializable {
     @FXML
     private TextField txtClient;
 
-    Socket socket;
-    DataInputStream dataInputStream;
-    DataOutputStream dataOutputStream;
-    String message;
+    private Socket socket;
+    private DataInputStream dataInputStream;
+    private DataOutputStream dataOutputStream;
+    private String clientName;
 
     public void setClientName(String name) {
+        this.clientName = name;
         lblName.setText(name);
+        connectToServer();
+    }
+
+    private void connectToServer() {
+        new Thread(() -> {
+            try {
+                socket = new Socket("localhost", 3001);
+                dataInputStream = new DataInputStream(socket.getInputStream());
+                dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+                dataOutputStream.writeUTF(clientName);
+                dataOutputStream.flush();
+
+                while (true) {
+                    String messageType = dataInputStream.readUTF();
+                    if (messageType.startsWith("text:")) {
+                        String message = messageType.substring(5);
+                        Platform.runLater(() -> textAreaClient.appendText(message + "\n"));
+                    } else if (messageType.startsWith("image:")) {
+                        String fileName = messageType.substring(6);
+                        int imageLength = dataInputStream.readInt();
+                        byte[] imageBytes = new byte[imageLength];
+                        dataInputStream.readFully(imageBytes);
+
+                        Platform.runLater(() -> {
+                            Image image = new Image(new ByteArrayInputStream(imageBytes));
+                            imageView.setImage(image);
+                        });
+                    }
+                }
+            } catch (IOException e) {
+                Platform.runLater(() -> textAreaClient.appendText("Connection to server lost.\n"));
+            }
+        }).start();
+        textAreaClient.setEditable(false);
     }
 
     @FXML
     void btnFileOnAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select File or Image");
+        File file = fileChooser.showOpenDialog(clientPane.getScene().getWindow());
 
+        if (file != null) {
+            try {
+                String fileName = file.getName();
+                if (fileName.toLowerCase().matches(".*\\.(png|jpg|jpeg|gif|bmp)$")) {
+                    Image image = new Image(file.toURI().toString());
+                    imageView.setImage(image);
+                    byte[] imageBytes = Files.readAllBytes(file.toPath());
+                    dataOutputStream.writeUTF("image:" + fileName);
+                    dataOutputStream.writeInt(imageBytes.length);
+                    dataOutputStream.write(imageBytes);
+                    dataOutputStream.flush();
+                } else {
+                    dataOutputStream.writeUTF("file:" + fileName);
+                    dataOutputStream.flush();
+                }
+            } catch (Exception e) {
+                textAreaClient.appendText("Error sending file: " + e.getMessage() + "\n");
+            }
+        }
     }
 
     @FXML
     void btnSendOnAction(MouseEvent event) {
-        sendClient();
-    }
-
-    private void sendClient() {
         try {
-            String clientMessage = txtClient.getText();
-            dataOutputStream.writeUTF(clientMessage);
-            textAreaClient.appendText("Client : " + clientMessage + "\n");
-            txtClient.clear();
+            String message = txtClient.getText();
+            if (!message.isEmpty()) {
+                dataOutputStream.writeUTF("text:" + message);
+                dataOutputStream.flush();
+                txtClient.clear();
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            textAreaClient.appendText("Failed to send message.\n");
         }
     }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        new Thread(() -> {
-            try {
-                socket = new Socket("localhost", 4000);
-                dataInputStream = new DataInputStream(socket.getInputStream());
-                dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-                while (true) {
-                    message = dataInputStream.readUTF();
-
-                    if (message.equals("IMAGE")) {
-                        int length = dataInputStream.readInt();
-                        byte[] imageBytes = new byte[length];
-                        dataInputStream.readFully(imageBytes);
-                        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
-                        Image image = new Image(byteArrayInputStream);
-                        imageView.setImage(image);
-                    }
-
-                    textAreaClient.appendText("Server : " + message + "\n");
-
-                    if (message.equalsIgnoreCase("exit")) {
-                        break;
-                    }
-                }
+    public void disconnect() {
+        try {
+            if (socket != null) {
+                dataOutputStream.writeUTF("exit");
                 socket.close();
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-        }).start();
-        textAreaClient.setEditable(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
