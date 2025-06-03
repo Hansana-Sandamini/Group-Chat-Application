@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import lk.ijse.inp.chatapplication.ServerInitializer;
+import lk.ijse.inp.chatapplication.AppInitializer;
 
 public class NameInputFormController {
 
@@ -37,7 +37,7 @@ public class NameInputFormController {
             Stage currentStage = (Stage) btnSubmit.getScene().getWindow();
             currentStage.close();
 
-            ServerInitializer.loadNameInputForm();
+            AppInitializer.loadNameInputForm();
         }
     }
 }

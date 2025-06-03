@@ -73,7 +73,7 @@ public class ServerFormController {
         if (file != null) {
             try {
                 String fileName = file.getName();
-                String fileType = fileName.toLowerCase().matches(".*\\.(png|jpg|jpeg|gif|bmp)$") ? "image" : "file";
+                String fileType = fileName.toLowerCase().matches(".*\\.(png|jpg|jpeg|gif|avif|webp)$") ? "image" : "file";
 
                 if (fileType.equals("image")) {
                     Image image = new Image(file.toURI().toString());

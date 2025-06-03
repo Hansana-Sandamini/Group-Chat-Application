@@ -7,7 +7,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lk.ijse.inp.chatapplication.controller.ServerFormController;
 
-public class ServerInitializer extends Application {
+public class AppInitializer extends Application {
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -34,7 +35,7 @@ public class ServerInitializer extends Application {
 
     public static void loadNameInputForm() throws Exception {
         Stage nameStage = new Stage();
-        Parent nameLoad = FXMLLoader.load(ServerInitializer.class.getResource("/view/NameInputForm.fxml"));
+        Parent nameLoad = FXMLLoader.load(AppInitializer.class.getResource("/view/NameInputForm.fxml"));
         Scene nameScene = new Scene(nameLoad);
         nameStage.setScene(nameScene);
         nameStage.setTitle("Enter Client Name");
